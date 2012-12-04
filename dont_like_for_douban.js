@@ -3,13 +3,12 @@
 // @namespace           tingleshao
 // @description         add unlike buttons for douban front page
 // @include             http://www.douban.com/
-// @version             1.1
+// @version             1.1.3
 // ==/UserScript==
 
 var guessList = document.getElementsByClassName('guess3-list')[0].childNodes;
 
 // close previous saved dont-like guess list
-
 var DL_list_s = GM_getValue("DL_list");
 if (typeof DL_list_s === "undefined") {
     alert("ddl");
@@ -18,17 +17,43 @@ if (typeof DL_list_s === "undefined") {
 else 
     DL_list = DL_list_s.split('&');
 
-for (var i = 1; i < guessList.length-1; i=i+2) {
+for (var i = 1; i < guessList.length-1; i=i+2) {    
+// +2 each time to skip Text Objects(\n?)   
+    
+    // check if the item is in the dont like list
     for (var j = 0; j < DL_list.length; j=j+1) {
-        if (DL_list[j] == document.getElementsByClassName('guess3-list')[0].childNodes[i].getAttribute('unique_id')) {
-            document.getElementsByClassName('guess3-list')[0].childNodes[i].style.display = 'none';
+        if (DL_list[j] == guessList[i].getAttribute('unique_id')) {
+            guessList[i].style.display = 'none';
+            continue;
         }    
     }
+    
+    // only add unlike button if there's a like button
+    // I found it ungly to add a button for a book item
+    // there're already 3 of them there
+    var btn_lbl = "";
+    
+    if(guessList[i].getElementsByClassName("usr-btn fav-btn").length != 0)
+    {
+        btn_lbl = "不喜欢";
+    }
+    else if(guessList[i].getElementsByClassName("usr-btn online-event-btn").length != 0)
+    {
+        btn_lbl = "不参加";
+    }
+    else
+    {
+        continue;
+    }
+    
+    
     var closeButton = document.createElement("cb");
     closeButton.id = "close_button" + i.toString();
     closeButton.href = "javascript";
-    closeButton.innerText = "不喜欢";
-    closeButton.innerHTML = "不喜欢";
+    // closeButton.innerText = "你妹";
+    closeButton.innerHTML = btn_lbl;
+   
+    
     var style = '\
        #close_button& {\
           zoom: 1;\
@@ -64,7 +89,6 @@ function closeGuess(id){
     }
     GM_setValue("DL_list",new_DL_list_s);
 }
-
 for (var i = 1; i < guessList.length-1; i=i+2) {
     cbb = document.getElementById("close_button"+i.toString());
     cbb.addEventListener("click",function(){closeGuess(this.id)}, false);
